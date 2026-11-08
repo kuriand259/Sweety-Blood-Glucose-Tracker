@@ -60,7 +60,7 @@ npm run seed
 npm run dev
 ```
 
-API listens on `http://localhost:4000` by default.
+API listens on `http://localhost:4100` by default (port 4000 is often taken by other local services).
 
 ### 3. Client
 
