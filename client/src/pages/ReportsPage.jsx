@@ -1,65 +1,69 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  Alert,
-  Card,
-  Group,
-  SimpleGrid,
-  Stack,
-  Text,
-  Title,
-  List,
-} from '@mantine/core';
+import { Alert, Loader, Stack } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
+import { MonthCalendar } from '../components/MonthCalendar';
 import { MonthReadingsChart } from '../components/MonthReadingsChart';
 import { api, ApiError } from '../lib/api';
+import { glucoseStatus, glucoseStatusLabel } from '../lib/glucose';
+import { monthKey, prettyDate, todayString, useMonthReadings } from '../lib/month';
 import { formatDateInput } from '../lib/slots';
 
-function ReportCard({ title, report }) {
+function ReportCard({ title, report, dark = false }) {
   if (!report) {
-    return null;
+    return <section className={`sw-card${dark ? ' dark' : ''}`} style={{ minHeight: 220 }} />;
   }
 
   const empty = report.count === 0;
+  const tileClass = dark ? 'sw-tile' : 'sw-tile light';
 
   return (
-    <Card withBorder padding="lg" radius="md">
-      <Stack gap="sm">
-        <div>
-          <Title order={4}>{title}</Title>
-          <Text size="sm" c="dimmed">
-            {report.start}
-            {report.start !== report.end ? ` → ${report.end}` : ''}
-          </Text>
-        </div>
+    <section className={`sw-card${dark ? ' dark' : ''}`}>
+      <div className="sw-card-head">
+        <h3 className="sw-card-title">{title}</h3>
+        <span className="sw-subtle" style={{ fontSize: 12 }}>
+          {prettyDate(report.start, { day: 'numeric', month: 'short' })}
+          {report.start !== report.end
+            ? ` – ${prettyDate(report.end, { day: 'numeric', month: 'short' })}`
+            : ''}
+        </span>
+      </div>
 
-        {empty ? (
-          <Text c="dimmed">No readings in this range.</Text>
-        ) : (
-          <>
-            <SimpleGrid cols={2} spacing="xs">
-              <Text size="sm">Highest: {report.highest} mg/dl</Text>
-              <Text size="sm">Lowest: {report.lowest} mg/dl</Text>
-              <Text size="sm">Average: {report.average} mg/dl</Text>
-              <Text size="sm">Count: {report.count}</Text>
-            </SimpleGrid>
-            {report.readings?.length ? (
-              <List size="sm" spacing={4}>
-                {report.readings.map((reading) => (
-                  <List.Item key={reading.id}>
-                    {reading.date} · {reading.slotLabel}: {reading.value} mg/dl
-                  </List.Item>
-                ))}
-              </List>
-            ) : null}
-          </>
-        )}
-      </Stack>
-    </Card>
+      {empty ? (
+        <div className="sw-subtle">No readings in this range.</div>
+      ) : (
+        <>
+          <div className="sw-stat-row" style={{ marginBottom: 18 }}>
+            <div className="sw-stat">
+              <span className="sw-big-number">{Math.round(report.average)}</span>
+              <small>avg mg/dl</small>
+            </div>
+            <span className={`sw-pill ${glucoseStatus(report.average)}`} style={{ marginBottom: 6 }}>
+              {glucoseStatusLabel(report.average)}
+            </span>
+          </div>
+          <div className="sw-tiles" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+            <div className={tileClass}>
+              <strong>{report.highest}</strong>
+              <span>Highest</span>
+            </div>
+            <div className={tileClass}>
+              <strong>{report.lowest}</strong>
+              <span>Lowest</span>
+            </div>
+            <div className={tileClass}>
+              <strong>{report.count}</strong>
+              <span>Readings</span>
+            </div>
+          </div>
+        </>
+      )}
+    </section>
   );
 }
 
 export function ReportsPage() {
-  const [selectedDate, setSelectedDate] = useState(() => new Date());
+  const [selectedDate, setSelectedDate] = useState(() => todayString());
+  const [calMonth, setCalMonth] = useState(() => monthKey(todayString()));
   const [daily, setDaily] = useState(null);
   const [monthToDate, setMonthToDate] = useState(null);
   const [monthly, setMonthly] = useState(null);
@@ -67,6 +71,7 @@ export function ReportsPage() {
   const [loading, setLoading] = useState(false);
 
   const dateString = formatDateInput(selectedDate);
+  const month = useMonthReadings(calMonth);
 
   const loadReports = useCallback(async () => {
     if (!dateString) {
@@ -97,40 +102,52 @@ export function ReportsPage() {
     loadReports();
   }, [loadReports]);
 
-  return (
-    <Stack maw={960} mx="auto" gap="lg">
-      <div>
-        <Title order={2}>Reports</Title>
-        <Text c="dimmed">
-          Daily, month-to-date, and previous-month summaries for a selected date.
-        </Text>
-      </div>
+  useEffect(() => {
+    if (dateString) setCalMonth(monthKey(dateString));
+  }, [dateString]);
 
-      <Group align="flex-end">
-        <DatePickerInput
-          label="Selected date"
-          value={selectedDate}
-          onChange={setSelectedDate}
-          valueFormat="YYYY-MM-DD"
-          maxDate={new Date()}
-          w={260}
-        />
-        {loading ? (
-          <Text size="sm" c="dimmed">
-            Loading…
-          </Text>
-        ) : null}
-      </Group>
+  return (
+    <Stack gap={20}>
+      <div className="sw-card glass" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', padding: '16px 24px' }}>
+        <div>
+          <h3 className="sw-card-title">Reports</h3>
+          <div className="sw-subtle" style={{ fontSize: 13 }}>
+            Daily, month-to-date and previous-month summaries for the selected date.
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {loading ? <Loader size="xs" color="dark" /> : null}
+          <DatePickerInput
+            aria-label="Selected date"
+            value={selectedDate}
+            onChange={(v) => v && setSelectedDate(v)}
+            valueFormat="DD MMM YYYY"
+            maxDate={new Date()}
+            w={200}
+          />
+        </div>
+      </div>
 
       {error ? <Alert color="red">{error}</Alert> : null}
 
-      <MonthReadingsChart report={monthToDate} />
-
-      <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">
-        <ReportCard title="Daily" report={daily} />
+      <div className="sw-grid three">
+        <ReportCard title="Daily" report={daily} dark />
         <ReportCard title="Month to date" report={monthToDate} />
         <ReportCard title="Previous month" report={monthly} />
-      </SimpleGrid>
+      </div>
+
+      <div className="sw-grid dash-mid">
+        <MonthReadingsChart report={monthToDate} />
+        <MonthCalendar
+          month={calMonth}
+          onMonthChange={setCalMonth}
+          readings={month.readings}
+          loading={month.loading}
+          selectedDate={dateString}
+          onSelectDate={setSelectedDate}
+          title="Pick a day to report on"
+        />
+      </div>
     </Stack>
   );
 }

@@ -8,7 +8,7 @@ export function ProtectedRoute() {
   if (loading) {
     return (
       <Center mih="100vh">
-        <Loader color="teal" />
+        <Loader color="dark" />
       </Center>
     );
   }

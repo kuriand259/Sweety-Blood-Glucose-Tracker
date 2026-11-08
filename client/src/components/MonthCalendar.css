@@ -1,0 +1,218 @@
+.sw-cal {
+  container-type: inline-size;
+}
+
+.sw-cal-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sw-cal-nav .sw-round-btn {
+  width: 38px;
+  height: 38px;
+  background: var(--sw-surface-2);
+  box-shadow: none;
+}
+
+.sw-cal-nav .sw-round-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.sw-cal-today {
+  border: 1px solid var(--sw-line);
+  background: transparent;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.sw-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  column-gap: 2px;
+  row-gap: 4px;
+}
+
+.sw-cal-weekdays {
+  margin-bottom: 8px;
+}
+
+.sw-cal-weekdays > div {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--sw-muted);
+}
+
+.sw-cal-cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  max-width: 76px;
+  justify-self: center;
+  margin: 0;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid #d2d2d2;
+  background: transparent;
+  color: var(--sw-text);
+  font: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+
+.sw-cal-cell.blank {
+  border: none;
+  cursor: default;
+}
+
+.sw-cal-cell:not(.blank):not(:disabled):hover {
+  transform: scale(1.06);
+  border-color: var(--sw-ink);
+  z-index: 2;
+}
+
+.sw-cal-cell.future {
+  cursor: default;
+  color: #b4b4b4;
+  border-color: #e0e0e0;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0 5px,
+    rgba(0, 0, 0, 0.07) 5px 6px
+  );
+}
+
+.sw-cal-cell.has-data {
+  background: var(--sw-surface-2);
+  border-color: transparent;
+}
+
+.sw-cal-cell.today {
+  border: 1.5px solid var(--sw-ink);
+}
+
+.sw-cal-cell.selected {
+  background: var(--sw-ink);
+  border-color: var(--sw-ink);
+  color: #fff;
+}
+
+.sw-cal-day {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* when a day has a pill, the day number moves to the bottom */
+.sw-cal-cell.has-data .sw-cal-day {
+  position: absolute;
+  bottom: 14%;
+  font-size: 11px;
+  color: var(--sw-muted);
+}
+
+.sw-cal-cell.has-data.selected .sw-cal-day {
+  color: #bdbdbd;
+}
+
+.sw-cal-pill {
+  position: relative;
+  z-index: 1;
+  padding: 3px 9px;
+  font-size: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.sw-cal-dots {
+  position: absolute;
+  top: 14%;
+  display: flex;
+  gap: 3px;
+}
+
+.sw-cal-dots i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #cfcfcf;
+}
+
+.sw-cal-dots i.on {
+  background: var(--sw-ink);
+}
+
+.sw-cal-cell.selected .sw-cal-dots i { background: #555; }
+.sw-cal-cell.selected .sw-cal-dots i.on { background: #fff; }
+
+.sw-cal-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--sw-line);
+}
+
+.sw-cal-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.sw-cal-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #555;
+}
+
+.sw-bg-good { background: var(--sw-good); }
+.sw-bg-warn { background: var(--sw-warn); }
+.sw-bg-bad  { background: var(--sw-bad); }
+
+.sw-cal-hatch {
+  border: 1px solid #cfcfcf;
+  background-image: repeating-linear-gradient(-45deg, transparent 0 2px, rgba(0, 0, 0, 0.25) 2px 3px);
+}
+
+.sw-cal-summary {
+  display: flex;
+  gap: 24px;
+}
+
+.sw-cal-summary > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.sw-cal-summary strong {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.sw-cal-summary span {
+  font-size: 11px;
+  color: var(--sw-muted);
+}
+
+/* compact calendar (narrow column or phone) */
+@container (max-width: 460px) {
+  .sw-cal-grid { column-gap: 1px; }
+  .sw-cal-pill { font-size: 10px; padding: 1px 6px; transform: translateY(-3px); }
+  .sw-cal-dots { top: 9%; gap: 2px; }
+  .sw-cal-dots i { width: 3px; height: 3px; }
+  .sw-cal-cell.has-data .sw-cal-day { bottom: 5%; font-size: 9px; }
+  .sw-cal-summary { gap: 16px; }
+}

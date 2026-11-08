@@ -1,39 +1,54 @@
-import { Card, Stack, Text, Title } from '@mantine/core';
 import {
+  Area,
   CartesianGrid,
-  Legend,
+  ComposedChart,
   Line,
-  LineChart,
+  ReferenceArea,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts';
 import { SLOT_OPTIONS } from '../lib/slots';
+import { prettyDate } from '../lib/month';
 
-const SLOT_COLORS = {
-  MORNING_FASTING: '#0ca678',
-  AFTER_BREAKFAST: '#1c7ed6',
-  AFTER_LUNCH: '#f08c00',
-  AFTER_DINNER: '#e03131',
+// Monochrome series, distinguished by shade + dash pattern.
+const SLOT_STYLE = {
+  MORNING_FASTING: { stroke: '#161616', dash: undefined, width: 2.5 },
+  AFTER_BREAKFAST: { stroke: '#6b6b6b', dash: undefined, width: 2 },
+  AFTER_LUNCH: { stroke: '#a3a3a3', dash: '5 4', width: 2 },
+  AFTER_DINNER: { stroke: '#c4c4c4', dash: '2 3', width: 2 },
 };
 
 function buildChartData(readings = []) {
   const byDate = new Map();
-
   for (const reading of readings) {
     if (!byDate.has(reading.date)) {
       byDate.set(reading.date, { date: reading.date });
     }
     byDate.get(reading.date)[reading.slot] = reading.value;
   }
+  return Array.from(byDate.values()).sort((a, b) => a.date.localeCompare(b.date));
+}
 
-  return Array.from(byDate.values()).sort((a, b) =>
-    a.date.localeCompare(b.date)
+function ChartTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{ background: '#161616', color: '#fff', padding: '10px 12px', borderRadius: 12, fontSize: 12 }}>
+      <div style={{ fontWeight: 600, marginBottom: 4 }}>{prettyDate(label)}</div>
+      {payload
+        .filter((p) => p.value != null && p.dataKey !== 'band')
+        .map((p) => (
+          <div key={p.dataKey} style={{ display: 'flex', justifyContent: 'space-between', gap: 14 }}>
+            <span style={{ opacity: 0.7 }}>{p.name}</span>
+            <span>{p.value} mg/dl</span>
+          </div>
+        ))}
+    </div>
   );
 }
 
-export function MonthReadingsChart({ report }) {
+export function MonthReadingsChart({ report, title = 'Month-to-date trend' }) {
   if (!report) {
     return null;
   }
@@ -42,49 +57,92 @@ export function MonthReadingsChart({ report }) {
   const data = buildChartData(report.readings);
 
   return (
-    <Card withBorder padding="lg" radius="md">
-      <Stack gap="sm">
+    <section className="sw-card">
+      <div className="sw-card-head">
         <div>
-          <Title order={4}>Month-to-date trend</Title>
-          <Text size="sm" c="dimmed">
-            {report.start}
-            {report.start !== report.end ? ` → ${report.end}` : ''}
-          </Text>
-        </div>
-
-        {empty ? (
-          <Text c="dimmed">No readings in this range.</Text>
-        ) : (
-          <div style={{ width: '100%', height: 320 }}>
-            <ResponsiveContainer>
-              <LineChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#dee2e6" />
-                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                <YAxis
-                  domain={['auto', 'auto']}
-                  unit=" mg/dl"
-                  width={64}
-                  tick={{ fontSize: 12 }}
-                />
-                <Tooltip />
-                <Legend />
-                {SLOT_OPTIONS.map((slot) => (
-                  <Line
-                    key={slot.value}
-                    type="monotone"
-                    dataKey={slot.value}
-                    name={slot.label}
-                    stroke={SLOT_COLORS[slot.value]}
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    connectNulls={false}
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
+          <h3 className="sw-card-title">{title}</h3>
+          <div className="sw-subtle" style={{ fontSize: 12 }}>
+            {prettyDate(report.start)}
+            {report.start !== report.end ? ` → ${prettyDate(report.end)}` : ''}
           </div>
-        )}
-      </Stack>
-    </Card>
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px' }}>
+          {SLOT_OPTIONS.map((s) => (
+            <span key={s.value} className="sw-cal-legend-item">
+              <svg width="18" height="6">
+                <line
+                  x1="0"
+                  y1="3"
+                  x2="18"
+                  y2="3"
+                  stroke={SLOT_STYLE[s.value].stroke}
+                  strokeWidth="2.5"
+                  strokeDasharray={SLOT_STYLE[s.value].dash}
+                />
+              </svg>
+              {s.label}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {empty ? (
+        <div className="sw-subtle">No readings in this range.</div>
+      ) : (
+        <div style={{ width: '100%', height: 380 }}>
+          <ResponsiveContainer>
+            <ComposedChart data={data} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+              <defs>
+                <linearGradient id="swFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#161616" stopOpacity={0.12} />
+                  <stop offset="100%" stopColor="#161616" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <ReferenceArea y1={70} y2={140} fill="#9be27a" fillOpacity={0.12} />
+              <CartesianGrid vertical={false} stroke="#efefef" />
+              <XAxis
+                dataKey="date"
+                tickFormatter={(d) => Number(d.slice(8, 10))}
+                tick={{ fontSize: 12, fill: '#8a8a8a' }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                domain={['auto', 'auto']}
+                width={48}
+                tick={{ fontSize: 12, fill: '#8a8a8a' }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#d0d0d0' }} />
+              <Area
+                type="monotone"
+                dataKey="MORNING_FASTING"
+                stroke="none"
+                fill="url(#swFill)"
+                legendType="none"
+                tooltipType="none"
+                connectNulls
+                isAnimationActive={false}
+              />
+              {SLOT_OPTIONS.map((slot) => (
+                <Line
+                  key={slot.value}
+                  type="monotone"
+                  dataKey={slot.value}
+                  name={slot.label}
+                  stroke={SLOT_STYLE[slot.value].stroke}
+                  strokeWidth={SLOT_STYLE[slot.value].width}
+                  strokeDasharray={SLOT_STYLE[slot.value].dash}
+                  dot={false}
+                  activeDot={{ r: 5, fill: '#161616', stroke: '#fff', strokeWidth: 2 }}
+                  connectNulls
+                />
+              ))}
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </section>
   );
 }

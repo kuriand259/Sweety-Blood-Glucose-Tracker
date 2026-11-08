@@ -3,17 +3,15 @@ import {
   Alert,
   Anchor,
   Button,
-  Container,
-  Paper,
   PasswordInput,
   Stack,
   Text,
   TextInput,
-  Title,
 } from '@mantine/core';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { ApiError } from '../lib/api';
+import { AuthLayout } from '../components/AuthLayout';
 
 export function RegisterPage() {
   const { register, isAuthenticated, loading } = useAuth();
@@ -43,14 +41,7 @@ export function RegisterPage() {
   }
 
   return (
-    <Container size={420} py={80}>
-      <Title order={1} ta="center" mb="xs">
-        Sweety
-      </Title>
-      <Text c="dimmed" ta="center" mb="lg">
-        Create an account to start tracking
-      </Text>
-      <Paper withBorder p="lg" radius="md">
+    <AuthLayout title="Create account" subtitle="Create an account to start tracking">
         <form onSubmit={handleSubmit}>
           <Stack>
             {error ? <Alert color="red">{error}</Alert> : null}
@@ -74,18 +65,17 @@ export function RegisterPage() {
               value={password}
               onChange={(event) => setPassword(event.currentTarget.value)}
             />
-            <Button type="submit" loading={submitting} color="teal">
+            <Button type="submit" loading={submitting} size="md" mt="xs">
               Sign up
             </Button>
             <Text size="sm" ta="center">
               Already have an account?{' '}
-              <Anchor component={Link} to="/login">
+              <Anchor c="dark" fw={600} component={Link} to="/login">
                 Log in
               </Anchor>
             </Text>
           </Stack>
         </form>
-      </Paper>
-    </Container>
+    </AuthLayout>
   );
 }
