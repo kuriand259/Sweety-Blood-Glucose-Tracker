@@ -106,7 +106,7 @@ Do **not** use `prisma db push` for this project.
 - `POST /api/auth/register` — name, email, password (min 8)
 - `POST /api/auth/login`
 - `GET /api/auth/me`
-- `GET /api/readings?date=YYYY-MM-DD`
+- `GET /api/readings?date=YYYY-MM-DD&page=1&limit=20` — `date` is optional; omit it for full history. Defaults: `page=1`, `limit=20` (max 100). Response includes `pagination: { page, limit, total, totalPages }`.
 - `POST /api/readings`
 - `PUT /api/readings/:id`
 - `DELETE /api/readings/:id`
@@ -115,6 +115,8 @@ Do **not** use `prisma db push` for this project.
 - `GET /api/reports/monthly?date=`
 
 Reading and report routes require `Authorization: Bearer <token>` and only return the signed-in user’s data.
+
+The Reports page also charts month-to-date readings (one Recharts line per time slot).
 
 ## Notes
 
@@ -126,10 +128,10 @@ Reading and report routes require `Authorization: Bearer <token>` and only retur
 
 ## Bonus ideas (not implemented yet)
 
-These can wait until the required flow is solid:
+Core bonuses already shipped: paginated reading history and a month-to-date Recharts trend on Reports.
 
-- Pagination for readings
-- Recharts trend charts
+Still later:
+
 - Docker Compose for full stack
 - React Testing Library form tests
 - Redis report cache
