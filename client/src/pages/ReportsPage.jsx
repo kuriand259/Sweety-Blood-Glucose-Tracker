@@ -10,6 +10,7 @@ import {
   List,
 } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
+import { MonthReadingsChart } from '../components/MonthReadingsChart';
 import { api, ApiError } from '../lib/api';
 import { formatDateInput } from '../lib/slots';
 
@@ -122,6 +123,8 @@ export function ReportsPage() {
       </Group>
 
       {error ? <Alert color="red">{error}</Alert> : null}
+
+      <MonthReadingsChart report={monthToDate} />
 
       <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">
         <ReportCard title="Daily" report={daily} />
