@@ -105,6 +105,28 @@ function parseDateQuery(date) {
   return { data: date };
 }
 
+function parseOptionalDateQuery(date) {
+  if (date === undefined || date === null || date === '') {
+    return { data: null };
+  }
+  return parseDateQuery(date);
+}
+
+function parsePaginationQuery(query = {}) {
+  const pageRaw = query.page === undefined || query.page === '' ? 1 : Number(query.page);
+  const limitRaw =
+    query.limit === undefined || query.limit === '' ? 20 : Number(query.limit);
+
+  if (!Number.isInteger(pageRaw) || pageRaw < 1) {
+    return { error: 'page must be an integer >= 1.' };
+  }
+  if (!Number.isInteger(limitRaw) || limitRaw < 1 || limitRaw > 100) {
+    return { error: 'limit must be an integer between 1 and 100.' };
+  }
+
+  return { data: { page: pageRaw, limit: limitRaw } };
+}
+
 function duplicateSlotMessage(slot) {
   const label = slotLabel(slot);
   const article = /^[AEIOUaeiou]/.test(label) ? 'an' : 'a';
@@ -115,6 +137,8 @@ module.exports = {
   parseCreateReading,
   parseUpdateReading,
   parseDateQuery,
+  parseOptionalDateQuery,
+  parsePaginationQuery,
   duplicateSlotMessage,
   validateDateField,
   validateValueField,

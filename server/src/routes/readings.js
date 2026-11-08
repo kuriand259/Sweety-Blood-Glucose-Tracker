@@ -3,10 +3,11 @@ const { requireAuth } = require('../middleware/auth');
 const {
   parseCreateReading,
   parseUpdateReading,
-  parseDateQuery,
+  parseOptionalDateQuery,
+  parsePaginationQuery,
 } = require('../validation/reading');
 const {
-  listReadingsForDate,
+  listReadings,
   createReading,
   updateReading,
   deleteReading,
@@ -17,14 +18,23 @@ const router = express.Router();
 router.use(requireAuth);
 
 router.get('/', async (req, res) => {
-  const parsed = parseDateQuery(req.query.date);
-  if (parsed.error) {
-    return res.status(400).json({ error: parsed.error });
+  const dateParsed = parseOptionalDateQuery(req.query.date);
+  if (dateParsed.error) {
+    return res.status(400).json({ error: dateParsed.error });
+  }
+
+  const paginationParsed = parsePaginationQuery(req.query);
+  if (paginationParsed.error) {
+    return res.status(400).json({ error: paginationParsed.error });
   }
 
   try {
-    const readings = await listReadingsForDate(req.user.id, parsed.data);
-    return res.json({ readings });
+    const result = await listReadings(req.user.id, {
+      date: dateParsed.data,
+      page: paginationParsed.data.page,
+      limit: paginationParsed.data.limit,
+    });
+    return res.json(result);
   } catch (err) {
     console.error('List readings failed:', err);
     return res.status(500).json({ error: 'Unable to load readings.' });

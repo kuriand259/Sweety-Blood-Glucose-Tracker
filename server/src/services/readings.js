@@ -37,6 +37,35 @@ async function listReadingsForDate(userId, dateString) {
     .map(serializeReading);
 }
 
+async function listReadings(userId, { date = null, page = 1, limit = 20 } = {}) {
+  const where = {
+    userId,
+    ...(date ? { date: parseDateOnly(date) } : {}),
+  };
+
+  const [total, readings] = await Promise.all([
+    prisma.reading.count({ where }),
+    prisma.reading.findMany({
+      where,
+      orderBy: [{ date: 'desc' }, { slot: 'asc' }],
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+  ]);
+
+  const totalPages = total === 0 ? 0 : Math.ceil(total / limit);
+
+  return {
+    readings: readings.map(serializeReading),
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+    },
+  };
+}
+
 async function assertCanCreate(userId, dateString, slot) {
   const date = parseDateOnly(dateString);
   const existingForSlot = await prisma.reading.findFirst({
@@ -163,6 +192,7 @@ async function deleteReading(userId, id) {
 module.exports = {
   serializeReading,
   listReadingsForDate,
+  listReadings,
   createReading,
   updateReading,
   deleteReading,
