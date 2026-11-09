@@ -224,9 +224,13 @@ Captured from the running app, signed in as the demo user with October–Novembe
 
 ### Dashboard
 
-Today's overview, month progress, the glucose calendar, today's four slot cards and the paginated reading history.
+Today's overview, month progress, the glucose calendar and today's four slot cards…
 
 ![Dashboard](docs/screenshots/dashboard.png)
+
+…and, further down, the paginated reading history.
+
+![Dashboard — reading history](docs/screenshots/dashboard-history.png)
 
 ### Reports — current month
 
@@ -236,9 +240,9 @@ For the current month, **Month overview** and **Monthly trend** run from the 1st
 
 ### Reports — an earlier month
 
-Picking a date in an earlier month (here 15 Oct) shows that whole month; the calendar jumps to and highlights the selected date.
+Picking a date in an earlier month (here 31 Oct) shows that whole month; the calendar jumps to and highlights the selected date.
 
-![Reports for 15 Oct 2026](docs/screenshots/reports-october.png)
+![Reports for 31 Oct 2026](docs/screenshots/reports-october.png)
 
 ### Modals
 
