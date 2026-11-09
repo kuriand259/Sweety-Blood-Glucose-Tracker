@@ -97,7 +97,15 @@ export function MonthReadingsChart({ report, title = 'Month-to-date trend' }) {
                   <stop offset="100%" stopColor="#161616" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <ReferenceArea y1={70} y2={140} fill="#9be27a" fillOpacity={0.12} />
+              {/* in-range band; extendDomain keeps 70–140 on the axis so the band is
+                  never dropped when a month's readings sit inside or beside it */}
+              <ReferenceArea
+                y1={70}
+                y2={140}
+                fill="#9be27a"
+                fillOpacity={0.12}
+                ifOverflow="extendDomain"
+              />
               <CartesianGrid vertical={false} stroke="#efefef" />
               <XAxis
                 dataKey="date"
