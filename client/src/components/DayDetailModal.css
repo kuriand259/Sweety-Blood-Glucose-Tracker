@@ -1,0 +1,150 @@
+/* compact day summary at the top of the calendar day modal */
+/* stacked: big average on top, the four stats in a row underneath */
+.sw-day-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  border-radius: 18px;
+  background: var(--sw-ink);
+  color: #fff;
+}
+
+.sw-day-summary .sw-subtle {
+  color: #a8a8a8;
+  font-size: 12px;
+}
+
+.sw-day-summary-main {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.sw-day-summary-main .sw-pill {
+  align-self: center;
+}
+
+.sw-day-summary-avg {
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.sw-day-summary-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sw-day-summary-stats > div {
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  color: #a8a8a8;
+}
+
+.sw-day-summary-stats b {
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* four small slot cards */
+.sw-day-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.sw-day-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 136px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: var(--sw-surface-2);
+  box-sizing: border-box;
+}
+
+.sw-day-card.empty {
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px dashed #c9c9c9;
+  color: #555;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.sw-day-card.empty:hover,
+.sw-day-card.empty:focus-visible {
+  background: var(--sw-surface-2);
+  border-color: var(--sw-ink);
+  color: var(--sw-ink);
+  outline: none;
+}
+
+.sw-day-card-add-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sw-day-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+  font-size: 13px;
+  color: #555;
+}
+
+.sw-day-card-slot {
+  flex: 1;
+  font-weight: 500;
+}
+
+.sw-day-card-body {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.sw-day-card-value {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.sw-day-card-unit {
+  margin-left: 4px;
+  font-size: 12px;
+  color: var(--sw-muted);
+}
+
+.sw-day-card-pill {
+  padding: 3px 10px;
+  font-size: 12px;
+}
+
+.sw-day-card-edit {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sw-day-card-edit .mantine-NumberInput-root {
+  flex: 1;
+  min-width: 0;
+}
+

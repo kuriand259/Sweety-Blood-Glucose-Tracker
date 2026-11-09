@@ -1,9 +1,10 @@
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { Loader, Tooltip } from '@mantine/core';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { glucoseStatus, glucoseStatusLabel, GLUCOSE_BANDS } from '../lib/glucose';
 import { SLOT_OPTIONS } from '../lib/slots';
 import { monthKey, monthLabel, shiftMonth, todayString, useMonthReadings } from '../lib/month';
+import { DayDetailModal } from './DayDetailModal';
 import './MonthCalendar.css';
 
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -53,21 +54,44 @@ function DayTooltip({ date, list, avg }) {
 }
 
 /**
- * Monthly glucose calendar — view only. It keeps its own displayed month and
- * loads that month's readings itself; it never changes state outside itself.
- * Each logged day is filled with the glucose band colour of that day's
- * average, with four dots for the slots logged. Values live in the tooltip so
- * dates stay readable.
+ * Monthly glucose calendar. It keeps its own displayed month and loads that
+ * month's readings itself; it never changes the page's state. Each logged day
+ * is filled with the glucose band colour of that day's average, with four dots
+ * for the slots logged. Values live in the tooltip so dates stay readable.
+ *
+ * Clicking a day (today or earlier) opens a modal with that day's summary and
+ * its four readings, which can be added / edited / deleted in place.
  *
  * Props:
- *  - reloadToken: bump it after adding / editing / deleting a reading so the
- *    calendar refetches the month it is showing.
+ *  - reloadToken: bump it after the page adds / edits / deletes a reading so
+ *    the calendar refetches the month it is showing.
+ *  - onReadingsChange(): optional; called after a reading is changed from the
+ *    day modal, so the page can refresh its own numbers.
+ *  - focusDate: optional 'YYYY-MM-DD'. When it changes the calendar jumps to
+ *    that month and highlights the day (the arrows still browse freely).
  *  - title: small label above the month name.
  */
-export function MonthCalendar({ reloadToken = 0, title = 'Glucose calendar' }) {
+export function MonthCalendar({
+  reloadToken = 0,
+  onReadingsChange,
+  focusDate,
+  title = 'Glucose calendar',
+}) {
   const today = todayString();
-  const [month, setMonth] = useState(() => monthKey(today));
-  const { readings, loading } = useMonthReadings(month, reloadToken);
+  const [month, setMonth] = useState(() => monthKey(focusDate || today));
+
+  // follow the page's selected date: show its month
+  useEffect(() => {
+    if (focusDate) setMonth(monthKey(focusDate));
+  }, [focusDate]);
+  const [openDate, setOpenDate] = useState(null);
+  const [localReload, setLocalReload] = useState(0);
+  const { readings, loading } = useMonthReadings(month, reloadToken + localReload);
+
+  function handleDayChanged() {
+    setLocalReload((n) => n + 1);
+    onReadingsChange?.();
+  }
 
   const cells = useMemo(() => buildCells(month), [month]);
   const byDate = useMemo(() => groupByDate(readings), [readings]);
@@ -148,17 +172,22 @@ export function MonthCalendar({ reloadToken = 0, title = 'Glucose calendar' }) {
             'sw-cal-cell',
             isFuture && 'future',
             isToday && 'today',
+            cell.date === focusDate && 'focused',
             list.length && 'has-data',
             list.length && `sw-bg-${status}`,
           ]
             .filter(Boolean)
             .join(' ');
 
+          const ariaLabel = `${cell.date}${avg !== null ? `, average ${avg} mg/dl, ${glucoseStatusLabel(avg).toLowerCase()}` : ''}`;
+          const Cell = isFuture ? 'div' : 'button';
           const circle = (
-            <div
+            <Cell
+              {...(isFuture
+                ? { role: 'img' }
+                : { type: 'button', onClick: () => setOpenDate(cell.date) })}
               className={classes}
-              role="img"
-              aria-label={`${cell.date}${avg !== null ? `, average ${avg} mg/dl, ${glucoseStatusLabel(avg).toLowerCase()}` : ''}`}
+              aria-label={ariaLabel}
             >
               <span className="sw-cal-day">{cell.day}</span>
               {list.length ? (
@@ -168,7 +197,7 @@ export function MonthCalendar({ reloadToken = 0, title = 'Glucose calendar' }) {
                   ))}
                 </span>
               ) : null}
-            </div>
+            </Cell>
           );
 
           return (
@@ -221,6 +250,13 @@ export function MonthCalendar({ reloadToken = 0, title = 'Glucose calendar' }) {
           </div>
         </div>
       </div>
+
+      <DayDetailModal
+        date={openDate}
+        readings={openDate ? byDate.get(openDate) || [] : []}
+        onClose={() => setOpenDate(null)}
+        onChanged={handleDayChanged}
+      />
     </div>
   );
 }

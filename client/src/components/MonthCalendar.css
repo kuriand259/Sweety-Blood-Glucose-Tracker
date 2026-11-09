@@ -66,6 +66,20 @@
   justify-content: center;
 }
 
+/* days up to today open the day modal */
+button.sw-cal-cell {
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+button.sw-cal-cell:hover,
+button.sw-cal-cell:focus-visible {
+  transform: scale(1.06);
+  box-shadow: 0 4px 14px rgba(22, 22, 22, 0.16);
+  z-index: 1;
+  outline: none;
+}
+
 .sw-cal-cell.blank {
   border: none;
 }
@@ -95,6 +109,17 @@
 
 .sw-cal-cell.has-data.today {
   border: 1.5px solid var(--sw-ink);
+}
+
+/* the page's selected date: a soft halo (translucent, so it never clips
+   against neighbouring circles) plus an ink edge */
+.sw-cal-cell.focused {
+  z-index: 1;
+  border-color: var(--sw-ink);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.6),
+    0 0 0 3px rgba(22, 22, 22, 0.08),
+    0 2px 14px 2px rgba(22, 22, 22, 0.24);
 }
 
 .sw-cal-day {

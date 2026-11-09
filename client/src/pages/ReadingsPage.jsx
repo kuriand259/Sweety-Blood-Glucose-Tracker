@@ -292,7 +292,7 @@ export function ReadingsPage() {
 
       {/* ---------------- Row 2 ---------------- */}
       <div className="sw-grid dash-cal">
-        <MonthCalendar reloadToken={reloadToken} />
+        <MonthCalendar reloadToken={reloadToken} onReadingsChange={refreshLists} />
 
         <section className="sw-day-panel">
           <div className="sw-card-head" style={{ padding: '4px 4px 0' }}>

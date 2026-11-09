@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Loader, Stack } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
+import { IconPencil } from '@tabler/icons-react';
+import { DayDetailModal } from '../components/DayDetailModal';
+import { ExpandButton } from '../components/ExpandButton';
 import { MonthCalendar } from '../components/MonthCalendar';
 import { MonthReadingsChart } from '../components/MonthReadingsChart';
 import { api, ApiError } from '../lib/api';
 import { glucoseStatus, glucoseStatusLabel } from '../lib/glucose';
-import { monthKey, prettyDate, shiftMonth, todayString, useMonthReadings } from '../lib/month';
+import { monthKey, prettyDate, shiftMonth, todayString } from '../lib/month';
 import { formatDateInput } from '../lib/slots';
 
 function ReportCard({ title, report, dark = false }) {
@@ -63,17 +66,17 @@ function ReportCard({ title, report, dark = false }) {
 
 export function ReportsPage() {
   const [selectedDate, setSelectedDate] = useState(() => todayString());
-  const [calMonth, setCalMonth] = useState(() => monthKey(todayString()));
   const [daily, setDaily] = useState(null);
   // Current month: 1st -> selected date. Any earlier month: the whole month.
   const [monthToDate, setMonthToDate] = useState(null);
-  const [monthIsPartial, setMonthIsPartial] = useState(true);
   const [monthly, setMonthly] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  // day modal for the selected date + a token so the calendar refetches after edits
+  const [dayModalOpen, setDayModalOpen] = useState(false);
+  const [calReload, setCalReload] = useState(0);
 
   const dateString = formatDateInput(selectedDate);
-  const month = useMonthReadings(calMonth);
 
   const loadReports = useCallback(async () => {
     if (!dateString) {
@@ -96,7 +99,6 @@ export function ReportsPage() {
       ]);
       setDaily(dailyData.report);
       setMonthToDate(mtdData.report);
-      setMonthIsPartial(isCurrentMonth);
       setMonthly(monthlyData.report);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Unable to load reports.');
@@ -111,10 +113,6 @@ export function ReportsPage() {
   useEffect(() => {
     loadReports();
   }, [loadReports]);
-
-  useEffect(() => {
-    if (dateString) setCalMonth(monthKey(dateString));
-  }, [dateString]);
 
   return (
     <Stack gap={20}>
@@ -135,6 +133,11 @@ export function ReportsPage() {
             maxDate={new Date()}
             w={200}
           />
+          <ExpandButton
+            icon={IconPencil}
+            label="Edit readings"
+            onClick={() => setDayModalOpen(true)}
+          />
         </div>
       </div>
 
@@ -142,25 +145,32 @@ export function ReportsPage() {
 
       <div className="sw-grid three">
         <ReportCard title="Daily" report={daily} dark />
-        <ReportCard title={monthIsPartial ? 'Month to date' : 'Month overview'} report={monthToDate} />
+        <ReportCard title="Month overview" report={monthToDate} />
         <ReportCard title="Previous month" report={monthly} />
       </div>
 
       <div className="sw-grid dash-mid">
         <MonthReadingsChart
           report={monthToDate}
-          title={monthIsPartial ? 'Month-to-date trend' : 'Monthly trend'}
+          title="Monthly trend"
         />
         <MonthCalendar
-          month={calMonth}
-          onMonthChange={setCalMonth}
-          readings={month.readings}
-          loading={month.loading}
-          selectedDate={dateString}
-          onSelectDate={setSelectedDate}
-          title="Pick a day to report on"
+          reloadToken={calReload}
+          onReadingsChange={loadReports}
+          focusDate={dateString}
         />
       </div>
+
+      {/* same day modal as the calendar, for the date picked above */}
+      <DayDetailModal
+        date={dayModalOpen ? dateString : null}
+        readings={daily?.readings ?? []}
+        onClose={() => setDayModalOpen(false)}
+        onChanged={() => {
+          loadReports();
+          setCalReload((n) => n + 1);
+        }}
+      />
     </Stack>
   );
 }
