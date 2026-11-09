@@ -67,7 +67,7 @@ function ReportCard({ title, report, dark = false }) {
 export function ReportsPage() {
   const [selectedDate, setSelectedDate] = useState(() => todayString());
   const [daily, setDaily] = useState(null);
-  // Current month: 1st -> selected date. Any earlier month: the whole month.
+  // Current month: always 1st -> today (not the picked day). Past months: whole month.
   const [monthToDate, setMonthToDate] = useState(null);
   const [monthly, setMonthly] = useState(null);
   const [error, setError] = useState('');
@@ -85,12 +85,14 @@ export function ReportsPage() {
     setLoading(true);
     setError('');
     try {
+      const today = todayString();
       const selectedMonth = monthKey(dateString);
-      const isCurrentMonth = selectedMonth === monthKey(todayString());
-      // /monthly returns the calendar month *before* the given date, so the 1st
-      // of the following month gives the whole selected month.
+      const isCurrentMonth = selectedMonth === monthKey(today);
+      // Month overview stays fixed while browsing days in the current month
+      // (always MTD through today). Past months use /monthly via the 1st of
+      // the following month so the whole selected month is returned.
       const monthPath = isCurrentMonth
-        ? `/api/reports/month-to-date?date=${dateString}`
+        ? `/api/reports/month-to-date?date=${today}`
         : `/api/reports/monthly?date=${shiftMonth(selectedMonth, 1)}-01`;
       const [dailyData, mtdData, monthlyData] = await Promise.all([
         api(`/api/reports/daily?date=${dateString}`),
@@ -120,7 +122,7 @@ export function ReportsPage() {
         <div>
           <h3 className="sw-card-title">Reports</h3>
           <div className="sw-subtle" style={{ fontSize: 13 }}>
-            Daily, month-to-date and previous-month summaries for the selected date.
+            Daily for the selected date, plus month overview and previous month.
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
