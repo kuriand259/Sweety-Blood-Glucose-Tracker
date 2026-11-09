@@ -150,6 +150,14 @@ export function ReadingFormModal({
             min={40}
             max={600}
             allowDecimal={false}
+            // pill-shaped input: move the step arrows in from the rounded edge
+            // (margin, not padding — padding shrinks the chevrons) and drop
+            // their divider so they don't get clipped
+            rightSectionWidth={48}
+            styles={{
+              controls: { marginRight: 14, paddingBlock: 7, boxSizing: 'border-box' },
+              control: { border: 0 },
+            }}
           />
           <Group gap="xs" mt="sm" grow>
             <Button variant="default" size="md" onClick={onClose}>
