@@ -93,6 +93,12 @@ body {
   flex-direction: column;
 }
 
+/* slot cards stretch to the calendar's height (2 rows) */
+.sw-day-panel .sw-slot-grid {
+  flex: 1;
+  grid-auto-rows: 1fr;
+}
+
 .sw-day-panel .sw-slot-card {
   min-height: 180px;
 }
@@ -246,6 +252,51 @@ body {
 .sw-round-btn.dark {
   background: var(--sw-ink);
   color: #fff;
+}
+
+/* icon-only pill that slides its label out to the right on hover / focus */
+.sw-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 13px;
+  border-radius: 999px;
+  background: var(--sw-ink);
+  color: #fff;
+  border: none;
+  text-decoration: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--sw-shadow);
+  overflow: hidden;
+}
+
+.sw-expand-btn-icon {
+  flex-shrink: 0;
+}
+
+.sw-expand-btn-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 0;
+  margin-left: 0;
+  opacity: 0;
+  white-space: nowrap;
+  transition: max-width 240ms ease, margin-left 240ms ease, opacity 160ms ease;
+}
+
+.sw-expand-btn:hover .sw-expand-btn-label,
+.sw-expand-btn:focus-visible .sw-expand-btn-label {
+  max-width: 180px;
+  margin-left: 8px;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sw-expand-btn-label { transition: none; }
 }
 
 .sw-avatar {
@@ -445,10 +496,15 @@ body {
 .sw-pill.none { background: var(--sw-surface-2); color: var(--sw-muted); }
 
 /* ring progress (Month progress card) */
+.sw-ring-pair {
+  display: flex;
+  gap: 16px;
+}
+
 .sw-ring {
   position: relative;
-  width: 140px;
-  height: 140px;
+  width: 144px;
+  height: 144px;
   flex: none;
 }
 
@@ -459,12 +515,13 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 600;
+  line-height: 1.1;
 }
 
 .sw-ring-label small {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
   color: var(--sw-muted);
 }
@@ -500,11 +557,16 @@ body {
 }
 
 .sw-grid.dash-top {
-  grid-template-columns: 1.15fr 1fr 1fr;
+  grid-template-columns: 1.2fr 1fr;
 }
 
 .sw-grid.dash-mid {
   grid-template-columns: 1.6fr 1fr;
+}
+
+/* dashboard: calendar capped so its circles stay compact, readings take the rest */
+.sw-grid.dash-cal {
+  grid-template-columns: minmax(360px, 640px) minmax(0, 1fr);
 }
 
 .sw-grid.three {
@@ -549,9 +611,8 @@ body {
    Responsive
 ------------------------------------------------------------------- */
 @media (max-width: 1200px) {
-  .sw-grid.dash-top { grid-template-columns: 1fr 1fr; }
-  .sw-grid.dash-top > :first-child { grid-column: 1 / -1; }
-  .sw-grid.dash-mid { grid-template-columns: 1fr; }
+  .sw-grid.dash-mid,
+  .sw-grid.dash-cal { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 900px) {
@@ -610,5 +671,4 @@ body {
 
 @media (max-width: 520px) {
   .sw-topbar { flex-wrap: wrap; }
-  .sw-topbar .mantine-Button-root { padding-inline: 14px; }
 }

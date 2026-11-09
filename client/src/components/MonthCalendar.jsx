@@ -1,9 +1,9 @@
-import { Fragment, useMemo } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { Loader, Tooltip } from '@mantine/core';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
-import { glucoseStatus, GLUCOSE_BANDS } from '../lib/glucose';
+import { glucoseStatus, glucoseStatusLabel, GLUCOSE_BANDS } from '../lib/glucose';
 import { SLOT_OPTIONS } from '../lib/slots';
-import { monthLabel, shiftMonth, todayString } from '../lib/month';
+import { monthKey, monthLabel, shiftMonth, todayString, useMonthReadings } from '../lib/month';
 import './MonthCalendar.css';
 
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -33,10 +33,12 @@ function buildCells(key) {
   return cells;
 }
 
-function DayTooltip({ date, list }) {
+function DayTooltip({ date, list, avg }) {
   return (
     <div style={{ fontSize: 12, lineHeight: 1.5 }}>
-      <div style={{ fontWeight: 600, marginBottom: 2 }}>{date}</div>
+      <div style={{ fontWeight: 600, marginBottom: 2 }}>
+        {date} · avg {avg} mg/dl ({glucoseStatusLabel(avg).toLowerCase()})
+      </div>
       {SLOT_OPTIONS.map((slot) => {
         const r = list.find((x) => x.slot === slot.value);
         return (
@@ -51,19 +53,22 @@ function DayTooltip({ date, list }) {
 }
 
 /**
- * Monthly glucose calendar. Each day is a circle; logged days get a coloured
- * pill with that day's average and four dots for the slots filled.
+ * Monthly glucose calendar — view only. It keeps its own displayed month and
+ * loads that month's readings itself; it never changes state outside itself.
+ * Each logged day is filled with the glucose band colour of that day's
+ * average, with four dots for the slots logged. Values live in the tooltip so
+ * dates stay readable.
+ *
+ * Props:
+ *  - reloadToken: bump it after adding / editing / deleting a reading so the
+ *    calendar refetches the month it is showing.
+ *  - title: small label above the month name.
  */
-export function MonthCalendar({
-  month,
-  onMonthChange,
-  readings = [],
-  selectedDate,
-  onSelectDate,
-  loading = false,
-  title = 'Glucose calendar',
-}) {
+export function MonthCalendar({ reloadToken = 0, title = 'Glucose calendar' }) {
   const today = todayString();
+  const [month, setMonth] = useState(() => monthKey(today));
+  const { readings, loading } = useMonthReadings(month, reloadToken);
+
   const cells = useMemo(() => buildCells(month), [month]);
   const byDate = useMemo(() => groupByDate(readings), [readings]);
   const canGoNext = shiftMonth(month, 1) <= today.slice(0, 7);
@@ -95,10 +100,7 @@ export function MonthCalendar({
             <button
               type="button"
               className="sw-cal-today"
-              onClick={() => {
-                onMonthChange(today.slice(0, 7));
-                onSelectDate?.(today);
-              }}
+              onClick={() => setMonth(today.slice(0, 7))}
             >
               Today
             </button>
@@ -107,7 +109,7 @@ export function MonthCalendar({
             type="button"
             className="sw-round-btn"
             aria-label="Previous month"
-            onClick={() => onMonthChange(shiftMonth(month, -1))}
+            onClick={() => setMonth(shiftMonth(month, -1))}
           >
             <IconChevronLeft size={18} />
           </button>
@@ -116,7 +118,7 @@ export function MonthCalendar({
             className="sw-round-btn"
             aria-label="Next month"
             disabled={!canGoNext}
-            onClick={() => canGoNext && onMonthChange(shiftMonth(month, 1))}
+            onClick={() => canGoNext && setMonth(shiftMonth(month, 1))}
           >
             <IconChevronRight size={18} />
           </button>
@@ -136,7 +138,6 @@ export function MonthCalendar({
           const list = byDate.get(cell.date) || [];
           const isFuture = cell.date > today;
           const isToday = cell.date === today;
-          const isSelected = cell.date === selectedDate;
           const avg = list.length
             ? Math.round(list.reduce((a, r) => a + r.value, 0) / list.length)
             : null;
@@ -147,24 +148,19 @@ export function MonthCalendar({
             'sw-cal-cell',
             isFuture && 'future',
             isToday && 'today',
-            isSelected && 'selected',
             list.length && 'has-data',
+            list.length && `sw-bg-${status}`,
           ]
             .filter(Boolean)
             .join(' ');
 
           const circle = (
-            <button
-              type="button"
+            <div
               className={classes}
-              disabled={isFuture}
-              onClick={() => onSelectDate?.(cell.date)}
-              aria-label={`${cell.date}${avg ? `, average ${avg} mg/dl` : ''}`}
+              role="img"
+              aria-label={`${cell.date}${avg !== null ? `, average ${avg} mg/dl, ${glucoseStatusLabel(avg).toLowerCase()}` : ''}`}
             >
               <span className="sw-cal-day">{cell.day}</span>
-              {avg !== null ? (
-                <span className={`sw-pill ${status} sw-cal-pill`}>{avg}</span>
-              ) : null}
               {list.length ? (
                 <span className="sw-cal-dots">
                   {SLOT_OPTIONS.map((s) => (
@@ -172,14 +168,14 @@ export function MonthCalendar({
                   ))}
                 </span>
               ) : null}
-            </button>
+            </div>
           );
 
           return (
             <Fragment key={cell.date}>
               {list.length ? (
                 <Tooltip
-                  label={<DayTooltip date={cell.date} list={list} />}
+                  label={<DayTooltip date={cell.date} list={list} avg={avg} />}
                   color="dark"
                   radius="md"
                   withArrow

@@ -125,6 +125,7 @@ The Reports page also charts month-to-date readings (one Recharts line per time 
 - **JWT** is returned on register/login and stored in the browser’s `localStorage` as `sweety_token`. The API expects `Authorization: Bearer …`.
 - **Glucose values** are whole numbers from 40–600 mg/dl. Report averages are computed and rounded to 1 decimal; they are not stored.
 - Unique constraint `(userId, date, slot)` enforces one reading per slot per day. The “only 4 readings per day” check is an application backstop.
+- **Colour coding** uses fixed display bands, the same for every slot: < 70 low, 70–140 in range, 141–180 elevated, > 180 high (`client/src/lib/glucose.js`). Calendar days are filled with the band colour of that day's average; values are shown in the tooltip.
 
 ## Bonus ideas (not implemented yet)
 
@@ -132,6 +133,7 @@ Core bonuses already shipped: paginated reading history and a month-to-date Rech
 
 Still later:
 
+- **Custom glucose ranges** — per-slot target bands (e.g. fasting vs. post-meal), editable per patient after consultation. Likely shape: a `GlucoseBandRange` table keyed by user + slot (replacing the hardcoded thresholds in `client/src/lib/glucose.js`), a `band` column on `Reading` captured at save time and returned by the API, and a `bands:recompute` script for when a patient's targets change.
 - Docker Compose for full stack
 - React Testing Library form tests
 - Redis report cache

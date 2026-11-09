@@ -8,8 +8,8 @@ import './index.css';
 import App from './App.jsx';
 
 // Monochrome theme: black is the primary action colour, everything else is
-// soft greys on white/frosted surfaces. Status colours (green/amber/red) are
-// reserved for glucose values only.
+// soft greys on white/frosted surfaces. Accent colours are reserved for
+// time-slot pills and day logging completeness (see index.css tokens).
 const theme = createTheme({
   primaryColor: 'dark',
   primaryShade: { light: 9, dark: 9 },

@@ -10,7 +10,7 @@ import {
   YAxis,
 } from 'recharts';
 import { SLOT_OPTIONS } from '../lib/slots';
-import { prettyDate } from '../lib/month';
+import { monthKey, monthLabel, prettyDate } from '../lib/month';
 
 // Monochrome series, distinguished by shade + dash pattern.
 const SLOT_STYLE = {
@@ -62,8 +62,7 @@ export function MonthReadingsChart({ report, title = 'Month-to-date trend' }) {
         <div>
           <h3 className="sw-card-title">{title}</h3>
           <div className="sw-subtle" style={{ fontSize: 12 }}>
-            {prettyDate(report.start)}
-            {report.start !== report.end ? ` → ${prettyDate(report.end)}` : ''}
+            {monthLabel(monthKey(report.start))}
           </div>
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px' }}>

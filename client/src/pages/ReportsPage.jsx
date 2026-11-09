@@ -5,7 +5,7 @@ import { MonthCalendar } from '../components/MonthCalendar';
 import { MonthReadingsChart } from '../components/MonthReadingsChart';
 import { api, ApiError } from '../lib/api';
 import { glucoseStatus, glucoseStatusLabel } from '../lib/glucose';
-import { monthKey, prettyDate, todayString, useMonthReadings } from '../lib/month';
+import { monthKey, prettyDate, shiftMonth, todayString, useMonthReadings } from '../lib/month';
 import { formatDateInput } from '../lib/slots';
 
 function ReportCard({ title, report, dark = false }) {
@@ -65,7 +65,9 @@ export function ReportsPage() {
   const [selectedDate, setSelectedDate] = useState(() => todayString());
   const [calMonth, setCalMonth] = useState(() => monthKey(todayString()));
   const [daily, setDaily] = useState(null);
+  // Current month: 1st -> selected date. Any earlier month: the whole month.
   const [monthToDate, setMonthToDate] = useState(null);
+  const [monthIsPartial, setMonthIsPartial] = useState(true);
   const [monthly, setMonthly] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -80,13 +82,21 @@ export function ReportsPage() {
     setLoading(true);
     setError('');
     try {
+      const selectedMonth = monthKey(dateString);
+      const isCurrentMonth = selectedMonth === monthKey(todayString());
+      // /monthly returns the calendar month *before* the given date, so the 1st
+      // of the following month gives the whole selected month.
+      const monthPath = isCurrentMonth
+        ? `/api/reports/month-to-date?date=${dateString}`
+        : `/api/reports/monthly?date=${shiftMonth(selectedMonth, 1)}-01`;
       const [dailyData, mtdData, monthlyData] = await Promise.all([
         api(`/api/reports/daily?date=${dateString}`),
-        api(`/api/reports/month-to-date?date=${dateString}`),
+        api(monthPath),
         api(`/api/reports/monthly?date=${dateString}`),
       ]);
       setDaily(dailyData.report);
       setMonthToDate(mtdData.report);
+      setMonthIsPartial(isCurrentMonth);
       setMonthly(monthlyData.report);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Unable to load reports.');
@@ -132,12 +142,15 @@ export function ReportsPage() {
 
       <div className="sw-grid three">
         <ReportCard title="Daily" report={daily} dark />
-        <ReportCard title="Month to date" report={monthToDate} />
+        <ReportCard title={monthIsPartial ? 'Month to date' : 'Month overview'} report={monthToDate} />
         <ReportCard title="Previous month" report={monthly} />
       </div>
 
       <div className="sw-grid dash-mid">
-        <MonthReadingsChart report={monthToDate} />
+        <MonthReadingsChart
+          report={monthToDate}
+          title={monthIsPartial ? 'Month-to-date trend' : 'Monthly trend'}
+        />
         <MonthCalendar
           month={calMonth}
           onMonthChange={setCalMonth}

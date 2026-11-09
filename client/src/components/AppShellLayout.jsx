@@ -1,4 +1,4 @@
-import { Button, Menu, UnstyledButton } from '@mantine/core';
+import { Menu, UnstyledButton } from '@mantine/core';
 import {
   IconChartLine,
   IconDroplet,
@@ -8,6 +8,7 @@ import {
 } from '@tabler/icons-react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { ExpandButton } from './ExpandButton';
 import { GLUCOSE_BANDS } from '../lib/glucose';
 import { prettyDate, todayString } from '../lib/month';
 
@@ -87,13 +88,11 @@ export function AppShellLayout() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Button
-              size="md"
-              leftSection={<IconPlus size={16} />}
+            <ExpandButton
+              icon={IconPlus}
+              label="Add reading"
               onClick={() => navigate('/readings', { state: { focusAdd: Date.now() } })}
-            >
-              Add reading
-            </Button>
+            />
             <Menu position="bottom-end" radius="lg" shadow="md" width={200}>
               <Menu.Target>
                 <UnstyledButton className="sw-avatar" aria-label="Account menu">
