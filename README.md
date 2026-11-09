@@ -15,16 +15,35 @@ Sweety helps a diabetes patient log up to four blood glucose readings per day an
 Sweety-Blood-Glucose-Tracker/
   server/          Express API + Prisma
   client/          React + Mantine app
+  docker-compose.yml
   .env.example     Environment variable template
   README.md
 ```
 
 ## Prerequisites
 
-- Node.js 20+
-- PostgreSQL 14+ (or Docker, see below)
+- Docker (Compose v2) for the one-command setup below, or
+- Node.js 20+ and PostgreSQL 14+ for the manual setup
 
-## Quick start
+## Quick start (Docker Compose)
+
+From the repo root, with Docker running:
+
+```bash
+docker compose up --build
+```
+
+That starts Postgres, applies committed Prisma migrations, seeds the demo user, and starts the API and the client. No `.env` files are required for this path.
+
+- App: http://localhost:5173
+- API: http://localhost:4100 (`curl http://localhost:4100/api/health` → `{"status":"ok"}`)
+- Demo login: `demo@sweety.test` / `password123`
+
+`Ctrl+C` stops the stack. `docker compose down` removes the containers. The database lives in the `sweety_pg` volume, so the next `docker compose up` keeps existing data and skips migrations that are already applied. `npm run seed` still runs on each API start and replaces only the demo user's readings.
+
+If port `5435`, `4100`, or `5173` is already in use, stop the other process first. A Postgres container started with the manual `docker run` example below also binds `5435`.
+
+## Quick start (manual)
 
 Once the env files exist (see Setup), run these in three terminals:
 
@@ -110,6 +129,8 @@ After seeding:
 
 | Location | Command | Purpose |
 | --- | --- | --- |
+| repo root | `docker compose up --build` | Start Postgres, API, and client |
+| repo root | `docker compose down` | Stop the Compose stack |
 | `server/` | `npm run dev` | Start API with nodemon |
 | `server/` | `npm start` | Start API without file watching |
 | `server/` | `npm test` | Run API tests (needs the database, see below) |
@@ -176,10 +197,11 @@ Reading and report routes require `Authorization: Bearer <token>` and only retur
 
 Core bonuses already shipped: paginated reading history and a Recharts monthly trend on Reports.
 
+Shipped: Docker Compose for Postgres, the API, and the client (`docker compose up --build`). On API startup the container runs `prisma migrate deploy`, then `npm run seed`.
+
 Still later:
 
 - **Custom glucose ranges** — per-slot target bands (e.g. fasting vs. post-meal), editable per patient after consultation. Likely shape: a `GlucoseBandRange` table keyed by user + slot (replacing the hardcoded thresholds in `client/src/lib/glucose.js`), a `band` column on `Reading` captured at save time and returned by the API, and a `bands:recompute` script for when a patient's targets change.
-- Docker Compose for full stack
 - React Testing Library form tests
 - Redis report cache
 - BullMQ reminder jobs
@@ -187,7 +209,8 @@ Still later:
 
 ## Troubleshooting
 
-- **`prisma migrate deploy` / API can't reach the database** — check Postgres is running and that the port in `DATABASE_URL` matches (the Docker example maps it to `5435`).
+- **`prisma migrate deploy` / API can't reach the database** — check Postgres is running and that the port in `DATABASE_URL` matches (the Docker example maps it to `5435`). Compose sets `DATABASE_URL` itself and uses the hostname `postgres`, so this applies to the manual setup only.
+- **`docker compose up` fails because a port is in use** — stop the process on `5435`, `4100`, or `5173`. If you previously created the manual database with `docker run --name sweety-postgres`, stop it with `docker stop sweety-postgres` before Compose binds `5435`.
 - **Client shows "Something went wrong" / network errors** — make sure the API is running and `VITE_API_URL` points at it; restart the Vite dev server after editing `client/.env`.
 - **Logged out unexpectedly** — the JWT expired (7 days) or `JWT_SECRET` changed; log in again.
 - **Port already in use** — change `PORT` in `server/.env` and `VITE_API_URL` in `client/.env` together.
