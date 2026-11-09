@@ -181,7 +181,7 @@ Reading and report routes require `Authorization: Bearer <token>` and only retur
 
 - **Dashboard** — always shows *today*: today's overview (average, readings logged, per-slot values, highest / lowest / spread), today's four slot cards (add, edit, delete), and this month's progress (share of readings in range, share of days logged). **Add reading** in the top bar opens the reading form.
 - **Calendar** (dashboard and Reports) — each logged day is filled with the band colour of that day's average; hover for the values. Clicking a day (today or earlier) opens a day modal with that day's summary and its four readings, which can be added, edited or deleted in place. The calendar only displays data; it doesn't change what the rest of the page shows.
-- **Reports** — pick a date to see the **Daily** report, the **Month overview** and the **Previous month**. For the **current** calendar month, Month overview is always month-to-date through **today** (1st → today), not through the picked day — so moving between days in this month only changes Daily, same idea as Previous month staying fixed for that month. That choice keeps month-to-date easier to read and cuts friction from the overview shifting under the date picker. For any **earlier** month, Month overview covers that whole month. **Previous month** is always the full calendar month before the selected date. **Edit readings** next to the date picker opens the day modal for the selected date, and the calendar jumps to and highlights that date.
+- **Reports** — pick a date to see the **Daily** report, the **Month overview** and the **Previous month**. For the **current** calendar month, Month overview is month-to-date for the selected date (1st → that date), matching the assignment example (e.g. 15 Oct → 1–15 Oct). For any **earlier** month, Month overview covers that whole month. **Previous month** is always the full calendar month before the selected date. **Edit readings** next to the date picker opens the day modal for the selected date, and the calendar jumps to and highlights that date.
 - **Reading history** (dashboard) — all readings, newest first, 10 per page.
 
 ## Notes
@@ -192,6 +192,7 @@ Reading and report routes require `Authorization: Bearer <token>` and only retur
 - **Glucose values** are whole numbers from 40–600 mg/dl. Report averages are computed and rounded to 1 decimal; they are not stored.
 - Unique constraint `(userId, date, slot)` enforces one reading per slot per day. The “only 4 readings per day” check is an application backstop.
 - **Colour coding** uses fixed display bands, the same for every slot: < 70 low, 70–140 in range, 141–180 elevated, > 180 high (`client/src/lib/glucose.js`). Calendar days are filled with the band colour of that day's average; values are shown in the tooltip.
+- **Month overview follows the selected date** (1st → that date in the current month) so the required report ranges match the brief. A lower-friction alternative would be to pin Month overview to **today** whenever the selected date is in the current month — Daily would still move with the picker, but Month overview would stay fixed (like Previous month within a given month) instead of shifting on every day change. Not shipped; see also custom date-range reports below.
 
 ## Bonus ideas (not implemented yet)
 
@@ -201,7 +202,7 @@ Shipped: Docker Compose for Postgres, the API, and the client (`docker compose u
 
 Still later:
 
-- **Custom date-range reports** *(personal suggestion)* — a free start/end picker would likely be a clearer UX than today’s fixed windows (current-month MTD through today, full past month, previous calendar month). Shape: `GET /api/reports/range?start=&end=` reusing `fetchReadingsInRange` / `buildReport`, plus start/end inputs on Reports, so the user can ask for any window (e.g. last 14 days or 20 Sep → 5 Nov) instead of only calendar-month slices.
+- **Custom date-range reports** *(personal suggestion)* — a free start/end picker would likely be a clearer UX than today’s fixed windows (MTD through the selected date, full past month, previous calendar month), and pairs well with the “pin MTD to today” idea above. Shape: `GET /api/reports/range?start=&end=` reusing `fetchReadingsInRange` / `buildReport`, plus start/end inputs on Reports, so the user can ask for any window (e.g. last 14 days or 20 Sep → 5 Nov) instead of only calendar-month slices.
 - **Custom glucose ranges** — per-slot target bands (e.g. fasting vs. post-meal), editable per patient after consultation. Likely shape: a `GlucoseBandRange` table keyed by user + slot (replacing the hardcoded thresholds in `client/src/lib/glucose.js`), a `band` column on `Reading` captured at save time and returned by the API, and a `bands:recompute` script for when a patient's targets change.
 - React Testing Library form tests
 - Redis report cache
