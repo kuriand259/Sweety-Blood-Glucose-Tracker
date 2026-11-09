@@ -15,6 +15,7 @@ Sweety helps a diabetes patient log up to four blood glucose readings per day an
 Sweety-Blood-Glucose-Tracker/
   server/          Express API + Prisma
   client/          React + Mantine app
+  docs/            Screenshots used in this README
   docker-compose.yml
   .env.example     Environment variable template
   README.md
@@ -217,6 +218,43 @@ Still later:
 - **Logged out unexpectedly** — the JWT expired (7 days) or `JWT_SECRET` changed; log in again.
 - **Port already in use** — change `PORT` in `server/.env` and `VITE_API_URL` in `client/.env` together.
 
-## Screenshots / recording
+## Screenshots
 
-Add submission screenshots or a short demo recording here before making the repository public.
+Captured from the running app, signed in as the demo user with October–November readings. Images live in [`docs/screenshots/`](docs/screenshots/).
+
+### Dashboard
+
+Today's overview, month progress, the glucose calendar, today's four slot cards and the paginated reading history.
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+### Reports — current month
+
+For the current month, **Month overview** and **Monthly trend** run from the 1st to the selected date.
+
+![Reports for 10 Nov 2026](docs/screenshots/reports-november.png)
+
+### Reports — an earlier month
+
+Picking a date in an earlier month (here 15 Oct) shows that whole month; the calendar jumps to and highlights the selected date.
+
+![Reports for 15 Oct 2026](docs/screenshots/reports-october.png)
+
+### Modals
+
+<table>
+  <tr>
+    <td align="center" valign="top" width="50%">
+      <img src="docs/screenshots/day-modal.png" alt="Day modal" width="400"><br>
+      <sub><b>Day modal</b> — opened from a calendar day or <b>Edit readings</b> on Reports; readings are added, edited or deleted in place.</sub>
+    </td>
+    <td align="center" valign="top" width="50%">
+      <img src="docs/screenshots/add-reading-modal.png" alt="Log a reading modal" width="380"><br>
+      <sub><b>Log a reading</b> — from <b>Add reading</b> in the top bar or an empty slot card; slots already logged for that date are disabled.</sub>
+    </td>
+  </tr>
+</table>
+
+### Login
+
+![Login](docs/screenshots/login.png)
